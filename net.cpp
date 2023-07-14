@@ -4,7 +4,7 @@ struct addrinfo* init_servinfo(){
     memset(&hints, 0, sizeof(hints));
 
     hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     if (getaddrinfo(NULL, "9000", &hints, &servinfo) == -1)
         exit(1);

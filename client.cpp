@@ -1,5 +1,6 @@
 #include "net.h"
 #include <netdb.h>
+#include <sys/socket.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -19,10 +20,11 @@ int getch() {
 int main () {
     struct addrinfo *servinfo = init_servinfo();
     int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    if(connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
+        exit(1);
     freeaddrinfo(servinfo);
     while (true){
         char word = getch();
-        int bytes_sent = sendto(sockfd, &word, sizeof(word), 0, 
-                servinfo->ai_addr, servinfo->ai_addrlen);
+        int bytes_sent = send(sockfd, &word, sizeof(word), 0);
     }
 }
