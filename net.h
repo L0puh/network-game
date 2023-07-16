@@ -17,7 +17,10 @@
 #include <thread>
 #include <mutex>
 #include <vector>
-
+struct Pos_t{
+    int x=0;
+    int y=0;
+};
 int const max_row=10;
 int const max_col=30;
 struct addrinfo* init_servinfo();
