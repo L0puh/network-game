@@ -55,17 +55,25 @@ void print_board(char board[max_row][max_col]){
 
 void handle_recv(int sockfd){
     int bytes_recv; 
-    Pos_t pos;
+    Pos_t pos, current_pos;
     char direction;
     while((bytes_recv = recv(sockfd, &pos, sizeof(pos), 0)) != -1){
         bytes_recv = recv(sockfd, &direction, sizeof(direction), 0);
-        {
-            std::lock_guard<std::mutex> lock(mtx); 
-            pos = move(pos, direction);
-            board[pos.y][pos.x] = '#';
+        if (direction != 'q') {
+            if (bytes_recv > 0 ){
+                std::lock_guard<std::mutex> lock(mtx); 
+                pos = move(pos, direction);
+                current_pos = pos;
+                board[pos.y][pos.x] = '#';
+            }
+            system("clear");
+            print_board(board);
+        } else {
+            board[current_pos.y][current_pos.x] = ' ';
+            system("clear");
+            print_board(board);
+            break;
         }
-        system("clear");
-        print_board(board);
     }
 }
 void handle_send(int sockfd) {
@@ -75,7 +83,7 @@ void handle_send(int sockfd) {
         system("clear");
         int bytes_sent = send(sockfd, &pos_user, sizeof(pos_user), 0);
         bytes_sent = send(sockfd, &direction, sizeof(direction), 0);
-        {
+        if (bytes_sent > 0) {
             std::lock_guard<std::mutex> lock(mtx); 
             pos_user = move(pos_user, direction);
             board[pos_user.y][pos_user.x] = '*';
@@ -89,7 +97,8 @@ Pos_t move(Pos_t pos_user, char direction){
     bool down = direction == 's' && pos_user.y != max_row-1;
     bool left = direction == 'a' && pos_user.x != 0;
     bool right = direction == 'd' && pos_user.x != max_col-1;
-
+    int x = pos_user.x, y = pos_user.y;
+   
     if (up) {
         board[pos_user.y][pos_user.x] = ' ';
         pos_user.y--;
