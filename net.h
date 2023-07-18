@@ -21,13 +21,10 @@ struct Pos_t{
     int x=0;
     int y=0;
 };
-struct user_t{
+struct User_t{
     int id;
-
-    Pos_t pos_me;
-    Pos_t pos_usr;
+    Pos_t pos;
 };
-
 struct connection_t{
     int id;
     int sockfd;

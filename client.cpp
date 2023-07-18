@@ -7,15 +7,15 @@
 
 
 void print_board(char board[max_row][max_col]);
-void handle_recv(int sockfd);
-void handle_send(int sockfd);
-user_t handle_start(int sockfd);
+void handle_player(int sockfd, User_t usr);
+void handle_me(int sockfd, User_t usr);
+void handle_recv(int sockfd, User_t cur_usr);
 
-Pos_t move(Pos_t pos_user, char direction);
-
+void send_direction(int sockfd);
+User_t handle_start(int sockfd);
+std::vector<User_t> users;
 char board[max_row][max_col];
 std::mutex mtx;
-user_t init;
 
 int getch() {
    struct termios oldt, newt;
@@ -28,7 +28,16 @@ int getch() {
    tcsetattr(0, TCSANOW, &oldt );
    return ch;
 }
-
+int init_client(){
+    
+    struct addrinfo *servinfo = init_servinfo();
+    int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    if(connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
+        exit(1);
+    freeaddrinfo(servinfo);
+    
+    return sockfd;
+}
 int main () {
    for (int row = 0; row < max_row; row++) {
         for (int colm = 0; colm < max_col; colm++){
@@ -36,24 +45,17 @@ int main () {
         }
     }
 
-    struct addrinfo *servinfo = init_servinfo();
-    int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-    if(connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
-        exit(1);
-    freeaddrinfo(servinfo);
-    
-
-    init = handle_start(sockfd); 
-  
-    board[init.pos_me.y][init.pos_me.x] = '*';
-
+    int sockfd = init_client();
+    User_t usr = handle_start(sockfd); 
+    users.push_back(usr);
+    board[usr.pos.y][usr.pos.x] = '*';
     print_board(board);
 
-    std::thread recvth(handle_recv, sockfd);
-    std::thread sendth(handle_send, sockfd);
+    std::thread recvth(handle_recv, sockfd, usr);
+    std::thread sendth(send_direction, sockfd);
 
-    recvth.join();
     sendth.join();
+    recvth.join();
 }
 
 void print_board(char board[max_row][max_col]){
@@ -65,46 +67,38 @@ void print_board(char board[max_row][max_col]){
     } 
 }
 
-user_t handle_start(int sockfd){
+User_t handle_start(int sockfd){
+    User_t usr;
     int bytes_recv;
-    user_t usr;
     bytes_recv = recv(sockfd, &usr, sizeof(usr), 0);
+    if (bytes_recv == -1 )
+        exit(1);
     return usr;
 
 }
 
-void handle_send(int sockfd) {
+void handle_recv(int sockfd, User_t cur_usr){
+    int bytes;
+    User_t usr;
+    Pos_t prev_pos = cur_usr.pos, prev_pos2;
+    while((bytes = recv(sockfd, &usr, sizeof(usr), 0)) > 0 ){
+        if(usr.id == cur_usr.id) {
+            board[prev_pos.y][prev_pos.x] = ' ';
+            board[usr.pos.y][usr.pos.x] = '*';
+            prev_pos = usr.pos;
+        } else {
+            board[prev_pos2.y][prev_pos2.x] = ' ';
+            board[usr.pos.y][usr.pos.x] = '#';
+            prev_pos2 = usr.pos;
+        }
+            system("clear");
+            print_board(board);
+    }
+}
+
+void send_direction(int sockfd){
     while (true){
         char direction = getch();
-        board[init.pos_me.y][init.pos_me.x] = ' ';
         int bytes_sent = send(sockfd, &direction, sizeof(direction), 0);
     }
 }
-
-
-void handle_recv(int sockfd){
-    int bytes_recv;
-    user_t usr, old_usr=init;
-    while((bytes_recv = recv(sockfd, &usr, sizeof(usr), 0)) != -1) {
-
-        if (bytes_recv > 0 ){
-            std::lock_guard<std::mutex> lock(mtx); 
-            if (init.id == usr.id) {
-                board[usr.pos_me.y][usr.pos_me.x] = '*';
-                board[usr.pos_usr.y][usr.pos_usr.y] = 'x';
-                init = usr;
-            }
-            else {
-                board[old_usr.pos_me.y][old_usr.pos_me.x] = ' ';
-                board[usr.pos_me.y][usr.pos_me.x] = 'x';
-                board[usr.pos_usr.y][usr.pos_usr.y] = '*';
-                old_usr = usr;
-            }
-        }
-        system("clear");
-        print_board(board);
-        
-
-    }
-}
-
