@@ -21,7 +21,20 @@ struct Pos_t{
     int x=0;
     int y=0;
 };
-int const max_row=20;
-int const max_col=30;
+struct user_t{
+    int id;
+
+    Pos_t pos_me;
+    Pos_t pos_usr;
+};
+
+struct connection_t{
+    int id;
+    int sockfd;
+    Pos_t pos;
+};
+int const max_row=10;
+int const max_col=20;
 struct addrinfo* init_servinfo();
+
 #endif
