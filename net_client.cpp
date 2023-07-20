@@ -38,7 +38,7 @@ void Client::create_threads(){
     
     User_t usr = add_user();
     std::thread recvth(&Client::handle_recv, this, usr);
-    std::thread sendth(&Client::send_direction, this);
+    std::thread sendth(&Client::send_direction, this, usr);
 
     sendth.join();
     recvth.join();
@@ -58,14 +58,21 @@ void Client::handle_recv(User_t cur_usr){
             board[usr.pos.y][usr.pos.x] = '#';
             prev_pos2 = usr.pos;
         }
-            system("clear");
             print_board(board);
     }
 }
 
-void Client::send_direction(){
+void Client::send_direction(User_t cur_usr){
     while (true){
         char direction = getch();
+        if (direction == ' ') { //space to attack
+            std::string msg = "which direction to shoot?";
+            print_board(board, msg);
+            direction = getch();
+            attack(direction, cur_usr.pos);
+            continue;
+
+        }
         int bytes_sent = send(sockfd, &direction, sizeof(direction), 0);
     }
 }

@@ -8,6 +8,60 @@ Pos_t Game::start() {
     return pos;
 }
 
+void Game::attack_up(Pos_t pos){
+    for(int i=0; i != pos.y; i++) {
+        board[i][pos.x] = '.';
+    }
+    print_board(board);
+    for (int i =0; i!= pos.y; i++){
+        board[i][pos.x] = ' ';
+    }
+}
+void Game::attack_down(Pos_t pos){
+    for(int i=pos.y; i != max_row; i++) {
+        board[i][pos.x] = '.';
+    }
+    print_board(board);
+    for(int i=pos.y; i != max_row; i++) {
+        board[i][pos.x] = ' ';
+    }
+}
+void Game::attack_right(Pos_t pos){
+
+    for (int i = pos.x; i != max_col; i++ ){
+        board[pos.y][i] = '.';
+    }
+    print_board(board);
+    for (int i = pos.x; i != max_col; i++ ){
+        board[pos.y][i] = ' ';
+    }
+}
+void Game::attack_left(Pos_t pos){
+    for (int i = pos.x; i != 0; i-- ){
+        board[pos.y][i] = '.';
+    }
+    print_board(board);
+    for (int i = pos.x; i != 0; i-- ){
+        board[pos.y][i] = ' ';
+    }
+}
+void Game::attack(char direction, Pos_t pos){
+    switch(direction){
+        case 'w':
+            attack_up(pos);
+            break;
+        case 'd':
+            attack_right(pos);
+            break;
+        case 's':
+            attack_down(pos);
+            break;
+        case 'a':
+            attack_left(pos);
+            break;
+    }
+}
+
 Pos_t Game::move(char direction, Pos_t pos, int id){
     
     bool up = direction == 'w' && pos.y != 0;
@@ -59,12 +113,16 @@ bool Game::check_empty(Pos_t pos, Pos_t p_pos, char direction){
     }
     return true;
 }
-void Game::print_board(char board[max_row][max_col]){
+void Game::print_board(char board[max_row][max_col], std::string msg){
+    system("clear");
     for (int row = 0; row < max_row; row++) {
         for (int colm = 0; colm < max_col; colm++){
             printf("%c", board[row][colm]);
         }
         printf("%d\n", row);
+        if (row == 0) {
+            printf("%s", msg.c_str());
+        }
     } 
 }
 

@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <stdio.h> //stderr
 #include <cstring> //memset 
+#include <string>
 
 #include <fstream>
 #include <thread>
@@ -19,6 +20,7 @@
 #include <vector>
 #include <termios.h> //getch
 
+#define MAX_HP 100
 
 struct Pos_t{
     int x=0;
@@ -27,6 +29,7 @@ struct Pos_t{
 struct User_t{
     int id;
     Pos_t pos;
+    int HP=MAX_HP;
 };
 struct connection_t{
     int id;
@@ -38,18 +41,24 @@ struct addrinfo* init_servinfo();
 
 class Game {
     private:
-        const static int  max_row = 10;
-        const static int max_col = 20;
+        const static int  max_row = 15;
+        const static int max_col = 50;
     public:
         void create_board();
     protected:
         char board[max_row][max_col];
         Pos_t prev_pos, prev_pos2;
-        void print_board(char board[max_row][max_col]);
+        void print_board(char board[max_row][max_col], std::string msg = " ");
         Pos_t start();
         int getch();
         Pos_t move(char direction, Pos_t pos, int id);
         bool check_empty(Pos_t pos, Pos_t p_pos, char direction);
+    protected:
+        void attack(char direction, Pos_t pos);
+        void attack_up(Pos_t pos);
+        void attack_down(Pos_t pos);
+        void attack_left(Pos_t pos);
+        void attack_right(Pos_t pos);
 
 };
 
@@ -62,7 +71,7 @@ class Client : public Game {
         Client();
         ~Client();
     private:
-        void send_direction();
+        void send_direction(User_t cur_usr);
         User_t handle_start();
         void handle_recv(User_t cur_usr);
         int init_client();

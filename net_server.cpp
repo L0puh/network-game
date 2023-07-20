@@ -77,7 +77,9 @@ void Server::handle_client(int sockfd, User_t usr){
     Pos_t pos = usr.pos;
     int id = usr.id;
     while((bytes_recv = recv(sockfd, &direction, sizeof(char), 0)) > 0){
-
+        if(direction == ' '){ //space
+            
+        }
         pos = move(direction, usr.pos, id); 
         usr.pos = pos;
         if (id == 1) {
