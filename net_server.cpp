@@ -75,24 +75,42 @@ void Server::handle_client(int sockfd, User_t usr){
     int bytes_recv, bytes_sent;
     char direction;
     Pos_t pos = usr.pos;
+    Attack_t att;
+    bool flag=false;
     int id = usr.id;
     while((bytes_recv = recv(sockfd, &direction, sizeof(char), 0)) > 0){
-        if(direction == ' '){ //space
-            
-        }
-        pos = move(direction, usr.pos, id); 
-        usr.pos = pos;
-        if (id == 1) {
-            prev_pos = pos;
+        if(direction == ' '){ 
+            flag = true;
+            recv(sockfd, &att, sizeof(att), 0);
         } else {
-            prev_pos2 = pos;
+            pos = move(direction, usr.pos, id); 
+            usr.pos = pos;
+            if (id == 1) {
+                prev_pos = pos;
+            } else {
+                prev_pos2 = pos;
+            }
         }
         std::vector<connection_t>::iterator itr=connections.begin(); 
         for (;itr != connections.end(); itr++){
-           bytes_sent = send(itr->sockfd, &usr, sizeof(usr), 0);
-           if (bytes_sent == -1)
-               exit(1);
+           if(itr->id != usr.id && flag){
+               User_t user{.id = itr->id, .pos = prev_pos2, .hit = att.hit, .HP=coop_user.HP-1};
+               att.hit = false;
+               flag = false;
+               coop_user.HP--; 
+               send(itr->sockfd, &user, sizeof(user), 0);
+               if (att.hit){
+                   send(itr->sockfd, &(att.direction), sizeof(char), 0);
+               }
+               continue;
+           } else {
+               bytes_sent = send(itr->sockfd, &usr, sizeof(usr), 0);
+               if (bytes_sent == -1)
+                   exit(1);
+           
+            }
         }
+
         printf("[%d] x=%d; y=%d\n", id, pos.x, pos.y);
     }
     if (bytes_recv == 0)

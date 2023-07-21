@@ -8,58 +8,93 @@ Pos_t Game::start() {
     return pos;
 }
 
-void Game::attack_up(Pos_t pos){
+bool Game::attack_up(Pos_t pos, int id){
+
+    User_t a_user = current_user;
+    if (id == current_user.id){
+        a_user = coop_user;
+    }
+    bool hitted=false;
     for(int i=0; i != pos.y; i++) {
         board[i][pos.x] = '.';
+        if (coop_user.pos.y  == i && a_user.pos.x == pos.x){
+            hitted = true;
+        }
     }
     print_board(board);
     for (int i =0; i!= pos.y; i++){
         board[i][pos.x] = ' ';
     }
+    return hitted;
 }
-void Game::attack_down(Pos_t pos){
+bool Game::attack_down(Pos_t pos, int id){
+
+    User_t a_user = current_user;
+    if (id == current_user.id){
+        a_user = coop_user;
+    }
+
+    bool hitted=false;
     for(int i=pos.y; i != max_row; i++) {
         board[i][pos.x] = '.';
+        if (coop_user.pos.y == i && pos.x == a_user.pos.x){
+            hitted = true;
+        }
     }
     print_board(board);
     for(int i=pos.y; i != max_row; i++) {
         board[i][pos.x] = ' ';
     }
+    return hitted;
 }
-void Game::attack_right(Pos_t pos){
-
+bool Game::attack_right(Pos_t pos, int id ){
+    User_t a_user = current_user;
+    if (id == current_user.id){
+        a_user = coop_user;
+    }
+    bool hitted = false;
     for (int i = pos.x; i != max_col; i++ ){
         board[pos.y][i] = '.';
+        if (coop_user.pos.y == i && pos.x == a_user.pos.x){
+            hitted = true;
+        }
     }
     print_board(board);
     for (int i = pos.x; i != max_col; i++ ){
         board[pos.y][i] = ' ';
     }
+    return hitted;
 }
-void Game::attack_left(Pos_t pos){
+bool Game::attack_left(Pos_t pos, int id){
+    User_t a_user = current_user;
+    if (id == current_user.id){
+        a_user = coop_user;
+    }
+    bool hitted = false;
     for (int i = pos.x; i != 0; i-- ){
         board[pos.y][i] = '.';
+        if (coop_user.pos.x == i && pos.y == a_user.pos.y) {
+            hitted = true;
+        }
     }
-    print_board(board);
+    print_board(board, (char*)&a_user.HP);
     for (int i = pos.x; i != 0; i-- ){
         board[pos.y][i] = ' ';
     }
+    return hitted;
 }
-void Game::attack(char direction, Pos_t pos){
+bool Game::attack(char direction, Pos_t pos, int id){
     switch(direction){
         case 'w':
-            attack_up(pos);
-            break;
+            return attack_up(pos, id);
         case 'd':
-            attack_right(pos);
-            break;
+            return attack_right(pos, id);
         case 's':
-            attack_down(pos);
-            break;
+            return attack_down(pos, id);
         case 'a':
-            attack_left(pos);
-            break;
+            return attack_left(pos, id);
     }
+    return false;
 }
 
 Pos_t Game::move(char direction, Pos_t pos, int id){
@@ -119,9 +154,11 @@ void Game::print_board(char board[max_row][max_col], std::string msg){
         for (int colm = 0; colm < max_col; colm++){
             printf("%c", board[row][colm]);
         }
-        printf("%d\n", row);
         if (row == 0) {
-            printf("%s", msg.c_str());
+            printf("%d : %s\n", row, msg.c_str());   
+
+        }else {
+            printf("%d\n", row);
         }
     } 
 }

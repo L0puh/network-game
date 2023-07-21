@@ -10,5 +10,6 @@ bash build.sh
 - [x] refactioring
 - [ ] after connection, appear the client on the another board immediately
 - [x] OOP
-- [ ] fix bug with attacking (send direction doesn't change position of user) 
+- [x] fix bug with attacking (send direction doesn't change position of user) 
         + add handler for hitting hp of a user
+- [ ] fix bug with hp

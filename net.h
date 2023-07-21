@@ -19,7 +19,7 @@
 #include <mutex>
 #include <vector>
 #include <termios.h> //getch
-
+#include <sstream> // ostringstream
 #define MAX_HP 100
 
 struct Pos_t{
@@ -29,11 +29,16 @@ struct Pos_t{
 struct User_t{
     int id;
     Pos_t pos;
+    bool hit=false;
     int HP=MAX_HP;
 };
 struct connection_t{
     int id;
     int sockfd;
+};
+struct Attack_t {
+    bool hit;
+    char direction;
 };
 
 
@@ -47,18 +52,19 @@ class Game {
         void create_board();
     protected:
         char board[max_row][max_col];
+        User_t current_user, coop_user;
         Pos_t prev_pos, prev_pos2;
-        void print_board(char board[max_row][max_col], std::string msg = " ");
+        void print_board(char board[max_row][max_col], std::string = " ");
         Pos_t start();
         int getch();
         Pos_t move(char direction, Pos_t pos, int id);
         bool check_empty(Pos_t pos, Pos_t p_pos, char direction);
     protected:
-        void attack(char direction, Pos_t pos);
-        void attack_up(Pos_t pos);
-        void attack_down(Pos_t pos);
-        void attack_left(Pos_t pos);
-        void attack_right(Pos_t pos);
+        bool attack(char direction, Pos_t pos, int id);
+        bool attack_up(Pos_t pos, int id);
+        bool attack_down(Pos_t pos, int id );
+        bool attack_left(Pos_t pos, int id);
+        bool attack_right(Pos_t pos, int id);
 
 };
 
@@ -71,9 +77,9 @@ class Client : public Game {
         Client();
         ~Client();
     private:
-        void send_direction(User_t cur_usr);
+        void send_direction();
         User_t handle_start();
-        void handle_recv(User_t cur_usr);
+        void handle_recv();
         int init_client();
         User_t add_user();
     public:

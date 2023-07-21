@@ -1,4 +1,5 @@
 #include "net.h"
+#include <cstdio>
 
 Client::Client(){
 }
@@ -37,42 +38,55 @@ User_t Client::add_user(){
 void Client::create_threads(){
     
     User_t usr = add_user();
-    std::thread recvth(&Client::handle_recv, this, usr);
-    std::thread sendth(&Client::send_direction, this, usr);
+    current_user = usr;
+    std::thread recvth(&Client::handle_recv, this);
+    std::thread sendth(&Client::send_direction, this);
 
     sendth.join();
     recvth.join();
 
 }
-void Client::handle_recv(User_t cur_usr){
+void Client::handle_recv(){
     int bytes;
     User_t usr;
-    Pos_t prev_pos = cur_usr.pos, prev_pos2;
+    Pos_t prev_pos = current_user.pos;
     while((bytes = recv(sockfd, &usr, sizeof(usr), 0)) > 0 ){
-        if(usr.id == cur_usr.id) {
+        if(usr.id == current_user.id) {
             board[prev_pos.y][prev_pos.x] = ' ';
             board[usr.pos.y][usr.pos.x] = '*';
+            current_user = usr;
             prev_pos = usr.pos;
         } else {
-            board[prev_pos2.y][prev_pos2.x] = ' ';
-            board[usr.pos.y][usr.pos.x] = '#';
-            prev_pos2 = usr.pos;
+            if (usr.hit){
+                char direction;
+                recv(sockfd, &direction, sizeof(char), 0);
+                attack(direction, usr.pos, usr.id);
+            } else {  
+                board[prev_pos2.y][prev_pos2.x] = ' ';
+                board[usr.pos.y][usr.pos.x] = '#';
+                prev_pos2 = usr.pos;
+            }
+            coop_user = usr;
         }
-            print_board(board);
+
+        std::ostringstream s;
+        s << current_user.HP;
+        std::string msg(s.str());
+        print_board(board, msg);
     }
 }
 
-void Client::send_direction(User_t cur_usr){
+void Client::send_direction(){
     while (true){
         char direction = getch();
+        int bytes_sent = send(sockfd, &direction, sizeof(direction), 0);
         if (direction == ' ') { //space to attack
             std::string msg = "which direction to shoot?";
             print_board(board, msg);
             direction = getch();
-            attack(direction, cur_usr.pos);
-            continue;
-
+            bool res = attack(direction, current_user.pos, current_user.id);
+            Attack_t att{.hit = res, .direction = direction};
+            bytes_sent = send(sockfd, &att, sizeof(att), 0);
         }
-        int bytes_sent = send(sockfd, &direction, sizeof(direction), 0);
     }
 }
