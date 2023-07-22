@@ -48,6 +48,9 @@ User_t Server::create_user(){
     Pos_t usr_pos = start();
     User_t usr{.id = id, .pos = usr_pos};
     for (auto itr = connections.begin(); itr!=connections.end(); itr++){
+        if (usr.id == itr->id){
+            itr->user = usr;
+        }
         send(itr->sockfd, &usr, sizeof(usr), 0);
     }
     return usr;
@@ -94,17 +97,24 @@ void Server::handle_client(int sockfd, User_t usr){
         std::vector<connection_t>::iterator itr=connections.begin(); 
         for (;itr != connections.end(); itr++){
            if(itr->id != usr.id && flag){
-               User_t user{.id = itr->id, .pos = prev_pos2, .hit = att.hit, .HP=coop_user.HP-1};
+               User_t user{.id = itr->id, .pos = prev_pos2, .hit = att.hit, .HP=itr->user.HP--};
                att.hit = false;
                flag = false;
                coop_user.HP--; 
                send(itr->sockfd, &user, sizeof(user), 0);
+               printf("USER ID: %d, USER HP %d\n", itr->id, itr->user.HP);
                if (att.hit){
                    send(itr->sockfd, &(att.direction), sizeof(char), 0);
                }
                continue;
            } else {
-               bytes_sent = send(itr->sockfd, &usr, sizeof(usr), 0);
+               if (itr->id == usr.id) {
+                   itr->user.pos = usr.pos;
+                    bytes_sent = send(itr->sockfd, &itr->user, sizeof(usr), 0);
+               } else {
+                    bytes_sent = send(itr->sockfd, &usr, sizeof(usr), 0);
+               }
+               printf("USER ID: %d, USER HP %d\n", itr->id, itr->user.HP);
                if (bytes_sent == -1)
                    exit(1);
            

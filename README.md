@@ -12,4 +12,4 @@ bash build.sh
 - [x] OOP
 - [x] fix bug with attacking (send direction doesn't change position of user) 
         + add handler for hitting hp of a user
-- [ ] fix bug with hp
+- [x] fix bug with hp

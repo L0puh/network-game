@@ -34,10 +34,11 @@ struct User_t{
 };
 struct connection_t{
     int id;
+    User_t user;
     int sockfd;
 };
 struct Attack_t {
-    bool hit;
+    bool hit=false;
     char direction;
 };
 
