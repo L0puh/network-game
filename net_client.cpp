@@ -57,16 +57,18 @@ void Client::handle_recv(){
             current_user = usr;
             prev_pos = usr.pos;
         } else {
+            usr.id=coop_user.id;
+            coop_user = usr;
             if (usr.hit){
                 char direction;
                 recv(sockfd, &direction, sizeof(char), 0);
+                printf("ATTACK ID: %d!!!\n", coop_user.id);
                 attack(direction, usr.pos, usr.id);
             } else {  
                 board[prev_pos2.y][prev_pos2.x] = ' ';
                 board[usr.pos.y][usr.pos.x] = '#';
                 prev_pos2 = usr.pos;
             }
-            coop_user = usr;
         }
 
         std::ostringstream s;

@@ -50,6 +50,7 @@ User_t Server::create_user(){
     for (auto itr = connections.begin(); itr!=connections.end(); itr++){
         if (usr.id == itr->id){
             itr->user = usr;
+            printf("user(%d) is connected\n", itr->id);
         }
         send(itr->sockfd, &usr, sizeof(usr), 0);
     }
@@ -97,16 +98,19 @@ void Server::handle_client(int sockfd, User_t usr){
         std::vector<connection_t>::iterator itr=connections.begin(); 
         for (;itr != connections.end(); itr++){
            if(itr->id != usr.id && flag){
-               User_t user{.id = itr->id, .pos = prev_pos2, .hit = att.hit, .HP=itr->user.HP--};
-               att.hit = false;
-               flag = false;
-               coop_user.HP--; 
-               send(itr->sockfd, &user, sizeof(user), 0);
-               printf("USER ID: %d, USER HP %d\n", itr->id, itr->user.HP);
-               if (att.hit){
+                flag = false;
+            
+                User_t user{.id = itr->id, .pos = prev_pos2, .hit = att.hit, .HP=itr->user.HP};
+                if (att.hit) user.HP--;
+                int bytes = send(itr->sockfd, &user, sizeof(user), 0);
+                printf("sent %d, size: %lu\n", bytes, sizeof(user));
+                if (att.hit){  
+                    printf("attack : USER ID: %d, HP:%d, HIT:%d\n", itr->user.id, itr->user.HP, itr->user.hit);
+                   itr->user.HP--;
+                   itr->user.hit=false;
                    send(itr->sockfd, &(att.direction), sizeof(char), 0);
-               }
-               continue;
+                }
+                continue;
            } else {
                if (itr->id == usr.id) {
                    itr->user.pos = usr.pos;
@@ -114,14 +118,13 @@ void Server::handle_client(int sockfd, User_t usr){
                } else {
                     bytes_sent = send(itr->sockfd, &usr, sizeof(usr), 0);
                }
-               printf("USER ID: %d, USER HP %d\n", itr->id, itr->user.HP);
                if (bytes_sent == -1)
                    exit(1);
            
             }
         }
 
-        printf("[%d] x=%d; y=%d\n", id, pos.x, pos.y);
+        /* printf("[%d] x=%d; y=%d\n", id, pos.x, pos.y); */
     }
     if (bytes_recv == 0)
         close_connection(id, sockfd);

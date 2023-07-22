@@ -27,7 +27,7 @@ struct Pos_t{
     int y=0;
 };
 struct User_t{
-    int id;
+    int id=0;
     Pos_t pos;
     bool hit=false;
     int HP=MAX_HP;
@@ -93,7 +93,7 @@ class Server : public Game {
         int sockfd_listen; 
         struct sockaddr_in their_addr;
         socklen_t size_addr = sizeof(their_addr);
-        int id;
+        int id=0;
         std::vector<connection_t> connections;
 
     public:
