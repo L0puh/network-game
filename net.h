@@ -29,7 +29,6 @@ struct Pos_t{
 struct User_t{
     int id=0;
     Pos_t pos;
-    bool hit=false;
     int HP=MAX_HP;
 };
 struct connection_t{
@@ -37,9 +36,14 @@ struct connection_t{
     User_t user;
     int sockfd;
 };
-struct Attack_t {
-    bool hit=false;
+
+struct Package{
+   
+    User_t user; 
     char direction;
+    char hit_direction=' ';
+    bool hit=false;
+
 };
 
 
@@ -78,9 +82,9 @@ class Client : public Game {
         Client();
         ~Client();
     private:
-        void send_direction();
+        void send_direction(User_t user);
         User_t handle_start();
-        void handle_recv();
+        void handle_recv(User_t user);
         int init_client();
         User_t add_user();
     public:

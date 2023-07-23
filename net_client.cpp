@@ -39,56 +39,49 @@ void Client::create_threads(){
     
     User_t usr = add_user();
     current_user = usr;
-    std::thread recvth(&Client::handle_recv, this);
-    std::thread sendth(&Client::send_direction, this);
+    std::thread recvth(&Client::handle_recv, this, usr);
+    std::thread sendth(&Client::send_direction, this, usr);
 
     sendth.join();
     recvth.join();
 
 }
-void Client::handle_recv(){
+void Client::handle_recv(User_t user){
     int bytes;
-    User_t usr;
-    Pos_t prev_pos = current_user.pos;
-    while((bytes = recv(sockfd, &usr, sizeof(usr), 0)) > 0 ){
-        if(usr.id == current_user.id) {
+    Package pckg;
+    while ((bytes = recv(sockfd, &pckg, sizeof(pckg), 0 )) > 0 ){
+        if(pckg.user.id == user.id) {
             board[prev_pos.y][prev_pos.x] = ' ';
-            board[usr.pos.y][usr.pos.x] = '*';
-            current_user = usr;
-            prev_pos = usr.pos;
+            board[pckg.user.pos.y][pckg.user.pos.x] = '*';
+            current_user = pckg.user;
+            prev_pos = pckg.user.pos;
         } else {
-            usr.id=coop_user.id;
-            coop_user = usr;
-            if (usr.hit){
-                char direction;
-                recv(sockfd, &direction, sizeof(char), 0);
-                printf("ATTACK ID: %d!!!\n", coop_user.id);
-                attack(direction, usr.pos, usr.id);
-            } else {  
-                board[prev_pos2.y][prev_pos2.x] = ' ';
-                board[usr.pos.y][usr.pos.x] = '#';
-                prev_pos2 = usr.pos;
-            }
+            if (pckg.hit)
+                attack(pckg.hit_direction, pckg.user.pos, pckg.user.id);
+            board[prev_pos2.y][prev_pos2.x] = ' ';
+            board[pckg.user.pos.y][pckg.user.pos.x] = '@';
+            prev_pos2 = pckg.user.pos;
+            coop_user = pckg.user;
         }
-
         std::ostringstream s;
         s << current_user.HP;
         std::string msg(s.str());
         print_board(board, msg);
     }
 }
-
-void Client::send_direction(){
+void Client::send_direction(User_t cur_user){
+    bool hit=false;
+    char hit_direction;
     while (true){
         char direction = getch();
-        int bytes_sent = send(sockfd, &direction, sizeof(direction), 0);
         if (direction == ' ') { //space to attack
             std::string msg = "which direction to shoot?";
             print_board(board, msg);
-            direction = getch();
-            bool res = attack(direction, current_user.pos, current_user.id);
-            Attack_t att{.hit = res, .direction = direction};
-            bytes_sent = send(sockfd, &att, sizeof(att), 0);
+            hit_direction = getch();
+            hit = attack(hit_direction, current_user.pos, current_user.id);
         }
+        Package pckg{ .user = cur_user, .direction = direction, .hit_direction = hit_direction, .hit=hit };
+        int bytes_sent = send(sockfd, &pckg, sizeof(pckg), 0);
+        hit=false;
     }
 }

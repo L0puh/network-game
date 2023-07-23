@@ -75,57 +75,34 @@ int Server::init_server(){
     }
     return sockfd;
 }
-void Server::handle_client(int sockfd, User_t usr){
-    int bytes_recv, bytes_sent;
-    char direction;
-    Pos_t pos = usr.pos;
-    Attack_t att;
-    bool flag=false;
-    int id = usr.id;
-    while((bytes_recv = recv(sockfd, &direction, sizeof(char), 0)) > 0){
-        if(direction == ' '){ 
-            flag = true;
-            recv(sockfd, &att, sizeof(att), 0);
-        } else {
-            pos = move(direction, usr.pos, id); 
-            usr.pos = pos;
-            if (id == 1) {
+
+
+void Server::handle_client(int sockfd, User_t cur_user){
+    int bytes;
+    Package pckg;
+    Pos_t pos = cur_user.pos;
+    while ((bytes = recv(sockfd, &pckg, sizeof(pckg), 0)) > 0 ){
+        if(!pckg.hit){
+            pos = move(pckg.direction, cur_user.pos, cur_user.id);
+            if (pckg.user.id == 1) 
                 prev_pos = pos;
-            } else {
+            else 
                 prev_pos2 = pos;
-            }
+            cur_user.pos = pos;
+            pckg.user = cur_user;
         }
+            
         std::vector<connection_t>::iterator itr=connections.begin(); 
         for (;itr != connections.end(); itr++){
-           if(itr->id != usr.id && flag){
-                flag = false;
-            
-                User_t user{.id = itr->id, .pos = prev_pos2, .hit = att.hit, .HP=itr->user.HP};
-                if (att.hit) user.HP--;
-                int bytes = send(itr->sockfd, &user, sizeof(user), 0);
-                printf("sent %d, size: %lu\n", bytes, sizeof(user));
-                if (att.hit){  
-                    printf("attack : USER ID: %d, HP:%d, HIT:%d\n", itr->user.id, itr->user.HP, itr->user.hit);
-                   itr->user.HP--;
-                   itr->user.hit=false;
-                   send(itr->sockfd, &(att.direction), sizeof(char), 0);
-                }
-                continue;
-           } else {
-               if (itr->id == usr.id) {
-                   itr->user.pos = usr.pos;
-                    bytes_sent = send(itr->sockfd, &itr->user, sizeof(usr), 0);
-               } else {
-                    bytes_sent = send(itr->sockfd, &usr, sizeof(usr), 0);
-               }
-               if (bytes_sent == -1)
-                   exit(1);
-           
+            if (pckg.user.id == itr->id && pckg.hit) {
+                itr->user.HP--;
+                pckg.user.HP = itr->user.HP;
             }
+            bytes = send(itr->sockfd, &pckg, sizeof(pckg), 0);
         }
-
-        /* printf("[%d] x=%d; y=%d\n", id, pos.x, pos.y); */
+        printf("[%d] x=%d; y=%d\n", id, pos.x, pos.y);
     }
-    if (bytes_recv == 0)
+    if (bytes == 0)
         close_connection(id, sockfd);
 }
+
