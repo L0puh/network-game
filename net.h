@@ -31,20 +31,20 @@ struct User_t{
     Pos_t pos;
     int HP=MAX_HP;
 };
-struct connection_t{
-    int id;
-    User_t user;
-    int sockfd;
-};
+struct Package_t{
 
-struct Package{
-   
     User_t user; 
     char direction;
     char hit_direction=' ';
     bool hit=false;
 
 };
+struct connection_t{
+    int id;
+    int sockfd;
+    Package_t pckg;
+};
+
 
 
 struct addrinfo* init_servinfo();
@@ -56,35 +56,36 @@ class Game {
     public:
         void create_board();
     protected:
+        std::vector<User_t> users;
         char board[max_row][max_col];
-        User_t current_user, coop_user;
-        Pos_t prev_pos, prev_pos2;
+    protected:
         void print_board(char board[max_row][max_col], std::string = " ");
         Pos_t start();
         int getch();
-        Pos_t move(char direction, Pos_t pos, int id);
-        bool check_empty(Pos_t pos, Pos_t p_pos, char direction);
+        Pos_t move(char direction, User_t *usr);
+        bool check_empty(char direction, User_t *user);
+        std::vector<User_t>::iterator return_coop_user(int id);
     protected:
-        bool attack(char direction, Pos_t pos, int id);
-        bool attack_up(Pos_t pos, int id);
-        bool attack_down(Pos_t pos, int id );
-        bool attack_left(Pos_t pos, int id);
-        bool attack_right(Pos_t pos, int id);
+        bool attack(char direction, User_t *user);
+        bool attack_up(User_t *user);
+        bool attack_down(User_t *user);
+        bool attack_left(User_t *user);
+        bool attack_right(User_t *user);
 
 };
 
 class Client : public Game {
     private:
-        std::vector<User_t> users;
         std::mutex mtx;
         int sockfd;
     public:
         Client();
         ~Client();
     private:
-        void send_direction(User_t user);
+        std::vector<User_t>::iterator remove_move(int id);
+        void send_direction(User_t *user);
         User_t handle_start();
-        void handle_recv(User_t user);
+        void handle_recv(User_t *user);
         int init_client();
         User_t add_user();
     public:

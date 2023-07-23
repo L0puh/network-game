@@ -49,11 +49,14 @@ User_t Server::create_user(){
     User_t usr{.id = id, .pos = usr_pos};
     for (auto itr = connections.begin(); itr!=connections.end(); itr++){
         if (usr.id == itr->id){
-            itr->user = usr;
-            printf("user(%d) is connected\n", itr->id);
+            itr->pckg.user = usr;
+            printf("user(%d) is connected ", itr->id);
         }
         send(itr->sockfd, &usr, sizeof(usr), 0);
     }
+    
+    users.push_back(usr);
+    printf("-> user(%d) is added\n", usr.id);
     return usr;
 }
 void Server::create_thread(){
@@ -79,24 +82,22 @@ int Server::init_server(){
 
 void Server::handle_client(int sockfd, User_t cur_user){
     int bytes;
-    Package pckg;
+    Package_t pckg;
     Pos_t pos = cur_user.pos;
     while ((bytes = recv(sockfd, &pckg, sizeof(pckg), 0)) > 0 ){
         if(!pckg.hit){
-            pos = move(pckg.direction, cur_user.pos, cur_user.id);
-            if (pckg.user.id == 1) 
-                prev_pos = pos;
-            else 
-                prev_pos2 = pos;
+            pos = move(pckg.direction, &cur_user);
             cur_user.pos = pos;
             pckg.user = cur_user;
         }
             
         std::vector<connection_t>::iterator itr=connections.begin(); 
         for (;itr != connections.end(); itr++){
-            if (pckg.user.id == itr->id && pckg.hit) {
-                itr->user.HP--;
-                pckg.user.HP = itr->user.HP;
+            if (pckg.user.id == itr->id ) {
+                itr->pckg=pckg;
+                if (pckg.hit){
+                    itr->pckg.user.HP = pckg.user.HP--;
+                }
             }
             bytes = send(itr->sockfd, &pckg, sizeof(pckg), 0);
         }
