@@ -1,5 +1,4 @@
-#include "net.h"
-#include <cstdio>
+#include "../net.h"
 
 Client::Client(){
 }

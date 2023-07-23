@@ -1,4 +1,4 @@
-#include "net.h"
+#include "../net.h"
 
 struct addrinfo* init_servinfo(){
     struct addrinfo hints, *servinfo;

@@ -1,4 +1,4 @@
-#include "net.h"
+#include "../net.h"
 
 Pos_t Game::start() {
     int x = std::rand(), y = std::rand();
