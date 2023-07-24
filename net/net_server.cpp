@@ -55,8 +55,6 @@ User_t Server::create_user(){
         send(itr->sockfd, &usr, sizeof(usr), 0);
     }
     
-    users.push_back(usr);
-    printf("-> user(%d) is added\n", usr.id);
     return usr;
 }
 void Server::create_thread(){

@@ -34,6 +34,7 @@ User_t Client::add_user(){
     print_board(board);
     return usr;
 }
+
 void Client::create_threads(){
     
     User_t usr = add_user();
@@ -53,19 +54,32 @@ std::vector<User_t>::iterator Client::remove_move(int id){
     }
     return users.begin();
 }
+bool Client::user_exsist(int id){
+    for (std::vector<User_t>::iterator itr = users.begin(); itr != users.end(); itr++){
+        if (id == itr->id){
+            return true;
+        }
+    }
+    return false;
+}
 void Client::handle_recv(User_t *user){
     int bytes;
     Package_t pckg;
     while ((bytes = recv(sockfd, &pckg, sizeof(pckg), 0 )) > 0 ){
         if(pckg.user.id == user->id) {
-            std::vector<User_t>::iterator itr= remove_move(user->id);
+            std::vector<User_t>::iterator itr = remove_move(user->id);
             board[pckg.user.pos.y][pckg.user.pos.x] = '*';
             *user = pckg.user;
             *itr = pckg.user;
+            printf("[id: %d], HP: %d, HIT: %d, size of vec: %zu \n", pckg.user.id, pckg.user.HP, pckg.hit, users.size());
         } else {
+            if (!user_exsist(pckg.user.id)){
+                users.push_back(pckg.user);
+            }
+            printf("[id: %d], HP: %d, HIT: %d, size of vec: %zu \n", pckg.user.id, pckg.user.HP, pckg.hit, users.size());
             if (pckg.hit)
                 attack(pckg.hit_direction, &pckg.user);
-            std::vector<User_t>::iterator itr= remove_move(user->id);
+            std::vector<User_t>::iterator itr= remove_move(pckg.user.id);
             board[pckg.user.pos.y][pckg.user.pos.x] = '@';
             *itr = pckg.user;
         }

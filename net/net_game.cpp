@@ -129,9 +129,13 @@ int Game::getch() {
 
 bool Game::check_empty(char direction, User_t *usr){
     bool non_null;
-
-    std::vector<User_t>::iterator itr = return_coop_user(usr->id);
-    User_t coop_user = *itr;
+    User_t coop_user;
+    for (auto itr = connections.begin(); itr != connections.end(); itr++){
+        if (usr->id != itr->pckg.user.id){
+            coop_user = itr->pckg.user;
+            break;
+            }
+    }
     Pos_t p_pos = coop_user.pos;
     int y = usr->pos.y, x = usr->pos.x;
     switch(direction){

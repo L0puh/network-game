@@ -56,6 +56,7 @@ class Game {
     public:
         void create_board();
     protected:
+        std::vector<connection_t> connections;
         std::vector<User_t> users;
         char board[max_row][max_col];
     protected:
@@ -82,6 +83,7 @@ class Client : public Game {
         Client();
         ~Client();
     private:
+        bool user_exsist(int id);
         std::vector<User_t>::iterator remove_move(int id);
         void send_direction(User_t *user);
         User_t handle_start();
@@ -99,7 +101,6 @@ class Server : public Game {
         struct sockaddr_in their_addr;
         socklen_t size_addr = sizeof(their_addr);
         int id=0;
-        std::vector<connection_t> connections;
 
     public:
         Server();
