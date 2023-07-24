@@ -1,5 +1,4 @@
 #include "../net.h"
-#include <vector>
 
 Pos_t Game::start() {
     int x = std::rand(), y = std::rand();
@@ -13,7 +12,12 @@ std::vector<User_t>::iterator Game::return_coop_user(int id ){
         if(id != itr->id) return itr;
     return users.begin();
 }
-
+std::string Game::get_HP(User_t *usr){
+        std::ostringstream s;
+        s << usr->HP;
+        std::string msg(s.str());
+        return msg;
+}
 bool Game::attack_up( User_t *usr){
     std::vector<User_t>::iterator itr = return_coop_user(usr->id);
     User_t coop_user = *itr;
@@ -24,7 +28,7 @@ bool Game::attack_up( User_t *usr){
             hitted = true;
         }
     }
-    print_board(board);
+    print_board(board, get_HP(usr));
     for (int i =0; i!= usr->pos.y; i++){
         board[i][usr->pos.x] = ' ';
     }
@@ -41,7 +45,7 @@ bool Game::attack_down( User_t *usr){
             hitted = true;
         }
     }
-    print_board(board);
+    print_board(board, get_HP(usr));
     for (int i =0; i!= max_row; i++){
         board[i][usr->pos.x] = ' ';
     }
@@ -54,13 +58,13 @@ bool Game::attack_right(User_t *usr ){
     bool hitted = false;
     for (int i = usr->pos.x; i != max_col; i++ ){
         board[usr->pos.y][i] = '.';
-        if (coop_user.pos.y == i && coop_user.pos.x == usr->pos.x){
+        if (coop_user.pos.x == i && coop_user.pos.y == usr->pos.y){
             hitted = true;
         }
     }
-    print_board(board);
+    print_board(board, get_HP(usr));
     for (int i = usr->pos.x; i != max_col; i++ ){
-        board[coop_user.pos.y][i] = ' ';
+        board[usr->pos.y][i] = ' ';
     }
     return hitted;
 }
@@ -75,7 +79,8 @@ bool Game::attack_left(User_t *usr){
             hitted = true;
         }
     }
-    print_board(board);
+    print_board(board, get_HP(usr));
+
     for (int i = usr->pos.x; i != 0; i-- ){
         board[usr->pos.y][i] = ' ';
     }

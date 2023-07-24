@@ -62,6 +62,14 @@ bool Client::user_exsist(int id){
     }
     return false;
 }
+std::vector<User_t>::iterator Client::get_user(int id){
+    for(auto itr=users.begin(); itr!= users.end(); itr++){
+        if (id == itr->id){
+            return itr;
+        }
+    }
+    return users.begin();
+}
 void Client::handle_recv(User_t *user){
     int bytes;
     Package_t pckg;
@@ -71,22 +79,21 @@ void Client::handle_recv(User_t *user){
             board[pckg.user.pos.y][pckg.user.pos.x] = '*';
             *user = pckg.user;
             *itr = pckg.user;
-            printf("[id: %d], HP: %d, HIT: %d, size of vec: %zu \n", pckg.user.id, pckg.user.HP, pckg.hit, users.size());
         } else {
             if (!user_exsist(pckg.user.id)){
                 users.push_back(pckg.user);
             }
-            printf("[id: %d], HP: %d, HIT: %d, size of vec: %zu \n", pckg.user.id, pckg.user.HP, pckg.hit, users.size());
-            if (pckg.hit)
+            if (pckg.hit){
                 attack(pckg.hit_direction, &pckg.user);
-            std::vector<User_t>::iterator itr= remove_move(pckg.user.id);
-            board[pckg.user.pos.y][pckg.user.pos.x] = '@';
-            *itr = pckg.user;
+                std::vector<User_t>::iterator usr = get_user(pckg.user.id);
+                usr->HP = pckg.user.HP;
+            } else {
+                std::vector<User_t>::iterator itr= remove_move(pckg.user.id);
+                board[pckg.user.pos.y][pckg.user.pos.x] = '@';
+                *itr = pckg.user;
+            }
         }
-        std::ostringstream s;
-        s << user->HP;
-        std::string msg(s.str());
-        print_board(board, msg);
+        print_board(board, get_HP(user));
     }
 }
 void Client::send_direction(User_t *user){

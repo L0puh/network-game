@@ -91,11 +91,13 @@ void Server::handle_client(int sockfd, User_t cur_user){
             
         std::vector<connection_t>::iterator itr=connections.begin(); 
         for (;itr != connections.end(); itr++){
-            if (pckg.user.id == itr->id ) {
+            if (pckg.hit && itr->id != cur_user.id){
+                itr->pckg.user.HP--;
+                bytes = send(itr->sockfd, &itr->pckg, sizeof(pckg), 0);
+                continue;
+            }
+            if (pckg.user.id == itr->id) {
                 itr->pckg=pckg;
-                if (pckg.hit){
-                    itr->pckg.user.HP = pckg.user.HP--;
-                }
             }
             bytes = send(itr->sockfd, &pckg, sizeof(pckg), 0);
         }
