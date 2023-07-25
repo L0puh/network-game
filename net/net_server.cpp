@@ -51,8 +51,16 @@ User_t Server::create_user(){
         if (usr.id == itr->id){
             itr->pckg.user = usr;
             printf("user(%d) is connected ", itr->id);
+            send(itr->sockfd, &usr, sizeof(usr), 0);
+        } else {
+            for (auto itr2 = connections.begin(); itr2 != connections.end(); itr2++){
+                if (itr2->id != usr.id){
+                    send(itr->sockfd, &usr, sizeof(usr), 0);
+                    send(itr->sockfd, &itr2->pckg, sizeof(itr2->pckg), 0);
+                }
+            }
         }
-        send(itr->sockfd, &usr, sizeof(usr), 0);
+        
     }
     
     return usr;

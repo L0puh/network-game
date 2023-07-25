@@ -31,6 +31,12 @@ User_t Client::add_user(){
     User_t usr = handle_start(); 
     users.push_back(usr);
     board[usr.pos.y][usr.pos.x] = '*';
+    Package_t pckg;
+    if (users.size() < 2){
+        recv(sockfd, &pckg, sizeof(pckg), 0);
+        users.push_back(pckg.user);
+        board[pckg.user.pos.y][pckg.user.pos.x] = '@';
+    }
     print_board(board);
     return usr;
 }
